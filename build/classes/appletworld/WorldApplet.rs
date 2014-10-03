@@ -1,0 +1,2 @@
+javalib.appletworld.WorldApplet$BigBangAction
+javalib.appletworld.WorldApplet
