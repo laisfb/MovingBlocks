@@ -1,17 +1,13 @@
 package movingBlocks;
 
-import com.sun.java.accessibility.util.AWTEventMonitor;
-import static com.sun.java.accessibility.util.AWTEventMonitor.addKeyListener;
 import java.awt.Color;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.util.Random;
-import javalib.worldimages.Posn;
-import javalib.worldimages.RectangleImage;
-import javalib.worldimages.WorldImage;
-import javalib.worldcanvas.WorldCanvas;
-import javax.swing.JFrame;
-import javax.swing.JTextField;
+
+import javalib.funworld.*;
+import javalib.colors.*;
+import javalib.worldcanvas.*;
+import javalib.worldimages.*;
+
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -22,7 +18,7 @@ import javax.swing.JTextField;
  *
  * @author laisfb
  */
-public class mainObject implements KeyListener {
+public class mainObject extends World {
     private final static int blockSize = 120;
     private final static int canvasWidth = 720;
     private final static int canvasHeight = 720;
@@ -38,13 +34,12 @@ public class mainObject implements KeyListener {
     }
         
     public mainObject(WorldCanvas c) {
+        super();
         int x = (blockSize/2); //first row
         this.pos = new Posn(x, randomInt());
         this.color = Color.orange;
         rect = new RectangleImage(pos, blockSize, blockSize, color);
-        c.drawImage(rect);
-        
-        addKeyListener(this);
+        c.drawImage(rect);        
     }
     
     public Posn getPos() {
@@ -79,20 +74,25 @@ public class mainObject implements KeyListener {
     
     
     @Override
-    public void keyPressed(KeyEvent e) {
-        System.out.println("sigh");
-        if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-            System.out.println("Right key pressed");
-        }
-        if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-            System.out.println("Left key pressed");
-        }
+    public WorldImage makeImage() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
+    
     @Override
-    public void keyReleased(KeyEvent e) {}
-
+    public World onKeyEvent(String str) {
+	  if (str.equals("x"))
+	    System.out.println("Yup!");
+	  else
+            System.out.println("Nope!");
+          
+          return this;
+    }
+    
     @Override
-    public void keyTyped(KeyEvent e) {}
+    public World onMouseClicked(Posn p) {
+        System.out.println("Click: (" + p.x + "," + p.y + ")");
+          
+        return this;
+    }
     
 }

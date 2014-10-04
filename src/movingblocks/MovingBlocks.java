@@ -4,9 +4,10 @@ package movingBlocks;
  *
  * @author laisfb
  */
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+
+import javalib.appletworld.World;
 import javalib.worldcanvas.WorldCanvas;
+import javalib.worldimages.*;
 import movingblocks.staticObjects;
 
 public class MovingBlocks {
@@ -18,16 +19,17 @@ public class MovingBlocks {
     
     public MovingBlocks() {}
     
-    
     public static void main(String[] args) {       
         
         WorldCanvas c = new WorldCanvas(canvasWidth, canvasHeight);
         mainObject obj = new mainObject(c);
         staticObjects world = new staticObjects(c, obj);
         
+        System.out.println("Sigh");
 
         // show several images in the canvas
         boolean makeDrawing = c.show();
    
     }
+
 }
