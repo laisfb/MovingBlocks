@@ -1,35 +1,26 @@
 package movingBlocks;
 
-/**
- *
- * @author laisfb
- */
-
-import javalib.appletworld.World;
 import javalib.worldcanvas.WorldCanvas;
 import javalib.worldimages.*;
-import movingblocks.staticObjects;
 
 public class MovingBlocks {
     
     private final static int blockSize = 120;
-    private final static int canvasWidth = 720;
-    private final static int canvasHeight = 720;
-    private final static int MAXLEVEL = 5;
+    private final static int width = 720;
+    private final static int height = 720;
+    private final static int numberBlocks = height/blockSize;
+    
+    private final static RectangleImage[][] world = new RectangleImage[numberBlocks][numberBlocks];
     
     public MovingBlocks() {}
-    
-    public static void main(String[] args) {       
-        
-        WorldCanvas c = new WorldCanvas(canvasWidth, canvasHeight);
-        mainObject obj = new mainObject(c);
-        staticObjects world = new staticObjects(c, obj);
-        
-        System.out.println("Sigh");
 
-        // show several images in the canvas
-        boolean makeDrawing = c.show();
-   
+    public static void main(String[] args) {
+        playerObject player = new playerObject();
+        
+        mainObject obj = new mainObject(player);
+        
+        // run the game
+        obj.bigBang(width, height, 1);
     }
 
 }
