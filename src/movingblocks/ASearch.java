@@ -132,12 +132,13 @@ class myNode {
         this.f = g + h;
     }
     
-    public void setG(int g) { this.g = g; }
+    public void setG(int g) { this.g = g; }    
     public void setH(int h) { this.h = h; }
     public void setF() { this.f = this.g + this.h; }
     
     public int getI() { return this.i; }
     public int getJ() { return this.j; }
+    public int getG() { return this.g; }
     public int getF() { return this.f; }
     
     public boolean isEqual(myNode n) {
@@ -146,22 +147,22 @@ class myNode {
     
     public myNode moveRight() {
         Posn pos = new Posn(i+1, j);
-        return new myNode(pos, g+1, 0);
+        return new myNode(pos);
     }
     
     public myNode moveLeft() {
         Posn pos = new Posn(i-1, j);
-        return new myNode(pos, g+1, 0);
+        return new myNode(pos);
     }
     
     public myNode moveUp() {
         Posn pos = new Posn(i, j-1);
-        return new myNode(pos, g+1, 0);
+        return new myNode(pos);
     }
     
     public myNode moveDown() {
         Posn pos = new Posn(i, j+1);
-        return new myNode(pos, g+1, 0);
+        return new myNode(pos);
     }
     
 }
@@ -193,7 +194,7 @@ public class ASearch {
             if ( goal.isEqual(myNodeList.get(i)) ) {
                 //if yes, done
                 this.solution = (myNodeList.get(i)).getF();
-                System.out.println("Yay! You found a solution!");
+                System.out.println("Yay! I found a solution!");
                 return;
                 //
             }
@@ -220,7 +221,7 @@ public class ASearch {
     private void makeRoot(playerObject player) {
         this.root = new myNode(convertPos(player.getPos()));
         this.root.setG(0);
-        this.root.setH(estimateH(root,goal));
+        estimateH(root);
         this.root.setF();
     }
     
@@ -239,38 +240,73 @@ public class ASearch {
     }
     
     private void expand(myNode n) {
-        myNode child = n.moveRight();
-        if(validMove(child)) {
-            child.setH(estimateH(child,goal));
+        
+        //DON'T add child if it is off board
+        //If is inside the board, check if it is a wall first
+        //If it's not, than ok
+        
+        myNode child = n.moveRight();       
+        if(onBoard(child) && !isWall(child)) {
+            estimateH(child);
+            setG(n, child);            
+            child.setF();
             myNodeList.add(child);
         }
         
         child = n.moveLeft();
-        if(validMove(child)) {
-            child.setH(estimateH(child,goal));
+        if(onBoard(child) && !isWall(child)) {
+            estimateH(child);
+            setG(n, child);
+            child.setF();
             myNodeList.add(child);
         }
         
         child = n.moveUp();
-        if(validMove(child)) {
-            child.setH(estimateH(child,goal));
+        if(onBoard(child) && !isWall(child)) {
+            estimateH(child);
+            setG(n, child);
+            child.setF();
             myNodeList.add(child);
         }
         
         child = n.moveDown();
-        if(validMove(child)) {
-            child.setH(estimateH(child,goal));
+        if(onBoard(child) && !isWall(child)) {
+            estimateH(child);
+            setG(n, child);            
+            child.setF();
             myNodeList.add(child);
         }
     }
     
-    private boolean validMove(myNode n) {
-        return (n.getI() >= 0 && n.getI() < numberBlocks &&
-                n.getJ() >= 0 && n.getJ() < numberBlocks); //true if on board
+    private boolean onBoard(myNode n) {
+        return (n.getI() >= 0 && n.getI() < numberBlocks && 
+                n.getJ() >= 0 && n.getJ() < numberBlocks);
     }
     
-    private int estimateH(myNode n, myNode goal) {
-        return (goal.getI() - n.getI()) + abs(goal.getJ() - n.getJ());
+    private boolean isWall(myNode n) { 
+        //System.out.println("Is there a wall at (" + n.getI() + "," + n.getJ() + ")?");
+        return world[n.getI()][n.getJ()].color == Color.GREEN;
+    }
+    
+    private boolean isRed(myNode n) {
+        return world[n.getI()][n.getJ()].color == Color.RED;
+    }
+    
+    private boolean isBlue(myNode n) {
+        return world[n.getI()][n.getJ()].color == Color.BLUE;
+    }    
+    
+    private void estimateH(myNode n) {
+        n.setH((goal.getI() - n.getI()) + abs(goal.getJ() - n.getJ()));
+    }
+    
+    private void setG(myNode parent, myNode child) { 
+        if(isRed(child))
+               child.setG(parent.getG() + 2);
+            else if(isBlue(child))
+               child.setG(parent.getG() + 0); //added zero just to understand what's happening
+            else
+                child.setG(parent.getG() + 1);
     }
     
     
