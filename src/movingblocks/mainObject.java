@@ -1,26 +1,28 @@
 package movingBlocks;
 
 import java.awt.Color;
-import java.util.Random;
 
 import javalib.funworld.*;
 import javalib.worldimages.*;
 
 public class mainObject extends World {
     
+    private final static int size = 720;
     private final static int blockSize = 120;
-    private final static int width = 720;
-    private final static int height = 720;
-    private final static int numberBlocks = height/blockSize;
+    private final static int numberBlocks = size/blockSize;
+    private int LEVEL;
     
-    private final static RectangleImage[][] world = new RectangleImage[numberBlocks][numberBlocks];
+    private static final RectangleImage[][] world = new RectangleImage[numberBlocks][numberBlocks];
     private final playerObject player;
     private boolean end = false;
     private int steps = 0;
+    private int best = 0;
     
-    public mainObject(playerObject player) {        
+    public mainObject(playerObject player, int level) {
         this.player = player;
+        this.LEVEL = level;
         
+        System.out.println("------------- LEVEL " + level + "-------------\n");
         // Clear the world
         for(int i=0; i<numberBlocks; i++)
             for(int j=0; j<numberBlocks; j++) {
@@ -30,16 +32,17 @@ public class mainObject extends World {
             }
         
         // Put the static objects on the array
-        staticObjects staticWorld = new staticObjects(world, player);
+        staticObjects staticWorld = new staticObjects(world, player, level);
         
         // Add the player to the world
         int j = (player.getPos().y - (blockSize/2))/blockSize;
         world[0][j] = player.getRect();
+        
+        this.best = bestPath();
     }
 
     @Override
     public WorldImage makeImage() {
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         
         OverlayImages img = new OverlayImages(world[0][0], world[0][0]);
         
@@ -53,8 +56,8 @@ public class mainObject extends World {
     }
     
     public OverlayImages makeGrid(OverlayImages img) {
-        for(int i=(blockSize/2); i<width; i+=blockSize) {
-            for(int j=(blockSize/2); j<height; j+=blockSize) {
+        for(int i=(blockSize/2); i<size; i+=blockSize) {
+            for(int j=(blockSize/2); j<size; j+=blockSize) {
                 WorldImage frame = new FrameImage(new Posn(i, j), blockSize, blockSize, Color.black);
                 img = new OverlayImages(img, frame);
                 //c.drawImage(frame);
@@ -66,7 +69,7 @@ public class mainObject extends World {
     
     @Override
     public World onKeyEvent(String str) {
-        Posn oldPos = new Posn(0,0);
+        //Posn oldPos = player.getPos();
         switch(str) {
             case "right":
                 steps += player.moveRight(world);
@@ -85,11 +88,26 @@ public class mainObject extends World {
                 break;
         }
         
-        System.out.println("You have taken " + steps + " steps so far.");
+        //System.out.println("You have taken " + steps + " steps so far.");
         movePlayer(player);
         
         if(end) {
-            this.endOfWorld("You reached the goal! Steps taken: " + steps);
+            System.out.println("You reached the goal! Steps taken: " + steps);
+            System.out.println("Jsyk, steps taken on the best solution: " + best);
+            LEVEL++;
+            
+            if(LEVEL == 6) {
+                this.endOfWorld("Game Over!");
+            }
+            else {
+                this.stopWorld();
+                playerObject p = new playerObject();
+                mainObject obj = new mainObject(p, LEVEL);
+        
+                // run the next level
+                obj.bigBang(size, size, 1);
+            }
+            
         }
         
         return this;
@@ -106,4 +124,7 @@ public class mainObject extends World {
         world[playerPos.x][playerPos.y] = player.getRect();
     }
     
+    public int bestPath() {
+        return new ASearch(world, player).getSolution();
+    }
 }

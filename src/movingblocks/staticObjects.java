@@ -2,7 +2,6 @@ package movingBlocks;
 
 import java.awt.Color;
 import java.util.Random;
-import javalib.appletworld.World;
 import javalib.worldcanvas.WorldCanvas;
 import javalib.worldimages.*;
 
@@ -14,12 +13,11 @@ interface Block {
 
 public class staticObjects {
     
+    private final static int size = 720;
     private final static int blockSize = 120;
-    private final static int width = 720;
-    private final static int height = 720;
-    private final static int numberBlocks = height/blockSize;
+    private final static int numberBlocks = size/blockSize;
    
-    public staticObjects(RectangleImage[][] world, playerObject player) {
+    public staticObjects(RectangleImage[][] world, playerObject player, int level) {
         Posn p = player.getPos();
         
         //There's no need to check if the position is the same as the mainObject
@@ -28,23 +26,76 @@ public class staticObjects {
         endPoint ep = new endPoint(epPos.y);
         world[numberBlocks-1][epPos.y] = ep.getRect();
       
-        Posn rsPos = new Posn(randomInt(), randomInt());
-        while(rsPos.isEqual(p) || rsPos.isEqual(epPos))
-            rsPos = new Posn(randomInt(), randomInt());
-        redSquare rs = new redSquare(rsPos);
-        world[rsPos.x][rsPos.y] = rs.getRect();
+        int tam = 3*(level-1) + 2;
+        Posn[] obst = new Posn[tam];
+        obst[0] = p;
+        obst[1] = epPos;
+        int j=2;
         
-        Posn bsPos = new Posn(randomInt(), randomInt());
-        while(bsPos.isEqual(p) || bsPos.isEqual(epPos) || bsPos.isEqual(rsPos))
-            bsPos = new Posn(randomInt(), randomInt());
-        blueSquare bs = new blueSquare(bsPos);
-        world[bsPos.x][bsPos.y] = bs.getRect();
-        
-        Posn wPos = new Posn(randomInt(), randomInt());
-        while(wPos.isEqual(p) || wPos.isEqual(epPos) || wPos.isEqual(rsPos) || wPos.isEqual(bsPos) )
-            wPos = new Posn(randomInt(), randomInt());
-        wall w = new wall(wPos);
-        world[wPos.x][wPos.y] = w.getRect();
+        for(int i=1; i<level; i++) {
+            
+            Posn rsPos = new Posn(randomInt(), randomInt());
+            while(notValidPos(rsPos, obst, j))
+                rsPos = new Posn(randomInt(), randomInt());            
+            obst[j] = rsPos;
+            j++;
+            redSquare rs = new redSquare(rsPos);
+            world[rsPos.x][rsPos.y] = rs.getRect();
+            
+            
+            Posn bsPos = new Posn(randomInt(), randomInt());
+            while(notValidPos(bsPos, obst, j))
+                bsPos = new Posn(randomInt(), randomInt());            
+            obst[j] = bsPos;
+            j++;
+            blueSquare bs = new blueSquare(bsPos);
+            world[bsPos.x][bsPos.y] = bs.getRect();
+            
+            
+            Posn wPos = new Posn(randomInt(), randomInt());
+            while(notValidPos(wPos, obst, j))
+                wPos = new Posn(randomInt(), randomInt());            
+            obst[j] = wPos;
+            j++;
+            wall w = new wall(wPos);
+            world[wPos.x][wPos.y] = w.getRect();
+            
+            /*
+            Posn rsPos = new Posn(randomInt(), randomInt());
+            while(notValidPos(rsPos,p) || notValidPos(rsPos,epPos))
+                rsPos = new Posn(randomInt(), randomInt());
+            redSquare rs = new redSquare(rsPos);
+            world[rsPos.x][rsPos.y] = rs.getRect();
+            
+            Posn bsPos = new Posn(randomInt(), randomInt());
+            while(notValidPos(bsPos,p) || notValidPos(bsPos,epPos) || notValidPos(bsPos,rsPos))
+                bsPos = new Posn(randomInt(), randomInt());
+            blueSquare bs = new blueSquare(bsPos);
+            world[bsPos.x][bsPos.y] = bs.getRect();
+
+            Posn wPos = new Posn(randomInt(), randomInt());
+            while(notValidPos(wPos,p) || notValidPos(wPos,epPos) || notValidPos(wPos,rsPos) || notValidPos(wPos,bsPos) )
+                wPos = new Posn(randomInt(), randomInt());
+            wall w = new wall(wPos);
+            world[wPos.x][wPos.y] = w.getRect();
+            */
+            
+        }
+    }
+    
+    public final boolean notValidPos(Posn p, Posn[] obst, int tam) {
+        //diff returns true if the difference between p and q is 1
+        //if (p.isEqual(obst[i]) || p.diff(obst[i]))
+        for(int i=0; i<tam; i++) {
+            if (p.isEqual(obst[i]))
+                return true;
+        }
+        return false;
+    }
+    
+    public final boolean notValidPos(Posn p, Posn q) {
+        //diff returns true if the difference between p and q is 1
+        return (p.isEqual(q) || p.diff(q));
     }
     
     public static int randomInt() {
@@ -54,17 +105,14 @@ public class staticObjects {
     
 class Obstacles {
     private final static int blockSize = 120;
-    private final static int width = 720;
-    private final static int height = 720;
-    private final static int numberBlocks = height/blockSize;
+    private final static int size = 720;
+    private final static int numberBlocks = size/blockSize;
     
     public int getBlockSize()    { return blockSize; }
-    public int getCanvasWidth()  { return width; }
-    public int getCanvasHeight() { return height; }
+    public int getCanvasSize()  { return size; }
     public int getNumberBlocks() { return numberBlocks; }
     
-    
-    WorldCanvas world = new WorldCanvas(width, height);
+    WorldCanvas world = new WorldCanvas(size, size);
     public WorldCanvas getWorld() { return world; }
     
     public int randomInt() {
@@ -76,6 +124,7 @@ class Obstacles {
     public Posn convertPos(Posn pos) {
         return new Posn(pos.x*getBlockSize() + getBlockSize()/2, pos.y*getBlockSize() + getBlockSize()/2);
     }
+    
     
 }
 
