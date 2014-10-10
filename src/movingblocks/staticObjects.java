@@ -1,15 +1,8 @@
-package movingBlocks;
+package movingblocks;
 
 import java.awt.Color;
 import java.util.Random;
-import javalib.worldcanvas.WorldCanvas;
 import javalib.worldimages.*;
-
-interface Block {
-    public int size(); //the size of the block
-    public String type(); //what kind of block it is
-    public RectangleImage getRect();
-}
 
 public class staticObjects {
     
@@ -40,8 +33,7 @@ public class staticObjects {
             obst[j] = rsPos;
             j++;
             redSquare rs = new redSquare(rsPos);
-            world[rsPos.x][rsPos.y] = rs.getRect();
-            
+            world[rsPos.x][rsPos.y] = rs.getRect();            
             
             Posn bsPos = new Posn(randomInt(), randomInt());
             while(notValidPos(bsPos, obst, j))
@@ -49,8 +41,7 @@ public class staticObjects {
             obst[j] = bsPos;
             j++;
             blueSquare bs = new blueSquare(bsPos);
-            world[bsPos.x][bsPos.y] = bs.getRect();
-            
+            world[bsPos.x][bsPos.y] = bs.getRect();            
             
             Posn wPos = new Posn(randomInt(), randomInt());
             while(notValidPos(wPos, obst, j))
@@ -59,26 +50,6 @@ public class staticObjects {
             j++;
             wall w = new wall(wPos);
             world[wPos.x][wPos.y] = w.getRect();
-            
-            /*
-            Posn rsPos = new Posn(randomInt(), randomInt());
-            while(notValidPos(rsPos,p) || notValidPos(rsPos,epPos))
-                rsPos = new Posn(randomInt(), randomInt());
-            redSquare rs = new redSquare(rsPos);
-            world[rsPos.x][rsPos.y] = rs.getRect();
-            
-            Posn bsPos = new Posn(randomInt(), randomInt());
-            while(notValidPos(bsPos,p) || notValidPos(bsPos,epPos) || notValidPos(bsPos,rsPos))
-                bsPos = new Posn(randomInt(), randomInt());
-            blueSquare bs = new blueSquare(bsPos);
-            world[bsPos.x][bsPos.y] = bs.getRect();
-
-            Posn wPos = new Posn(randomInt(), randomInt());
-            while(notValidPos(wPos,p) || notValidPos(wPos,epPos) || notValidPos(wPos,rsPos) || notValidPos(wPos,bsPos) )
-                wPos = new Posn(randomInt(), randomInt());
-            wall w = new wall(wPos);
-            world[wPos.x][wPos.y] = w.getRect();
-            */
             
         }
     }
@@ -93,27 +64,19 @@ public class staticObjects {
         return false;
     }
     
-    public final boolean notValidPos(Posn p, Posn q) {
-        //diff returns true if the difference between p and q is 1
-        return (p.isEqual(q) || p.diff(q));
-    }
-    
     public static int randomInt() {
         return new Random().nextInt(numberBlocks-1);
     }
 }
-    
+
 class Obstacles {
     private final static int blockSize = 120;
     private final static int size = 720;
     private final static int numberBlocks = size/blockSize;
     
     public int getBlockSize()    { return blockSize; }
-    public int getCanvasSize()  { return size; }
-    public int getNumberBlocks() { return numberBlocks; }
-    
-    WorldCanvas world = new WorldCanvas(size, size);
-    public WorldCanvas getWorld() { return world; }
+    public int getCanvasSize()   { return size; }
+    public int getNumberBlocks() { return numberBlocks; }    
     
     public int randomInt() {
         int rn = new Random().nextInt(getNumberBlocks());
@@ -125,10 +88,9 @@ class Obstacles {
         return new Posn(pos.x*getBlockSize() + getBlockSize()/2, pos.y*getBlockSize() + getBlockSize()/2);
     }
     
-    
 }
 
-class redSquare extends Obstacles implements Block {
+class redSquare extends Obstacles {
     private final Color color;
     private final RectangleImage rect;
     
@@ -136,24 +98,13 @@ class redSquare extends Obstacles implements Block {
         this.color = Color.RED;
         rect = new RectangleImage(convertPos(pos), getBlockSize(), getBlockSize(), color);
     }
-    
-    @Override
-    public int size() {
-        return getBlockSize();
-    }
 
-    @Override
-    public String type() {
-        return "redSquare";
-    }
-
-    @Override
     public RectangleImage getRect() {
         return this.rect;
     }
 }
 
-class blueSquare extends Obstacles implements Block {
+class blueSquare extends Obstacles {
     private final Color color;
     private final RectangleImage rect;
     
@@ -162,23 +113,12 @@ class blueSquare extends Obstacles implements Block {
         rect = new RectangleImage(convertPos(pos), getBlockSize(), getBlockSize(), color);
     }
     
-    @Override
-    public int size() {
-        return getBlockSize();
-    }
-
-    @Override
-    public String type() {
-        return "blueSquare";
-    }
-
-    @Override
     public RectangleImage getRect() {
         return this.rect;
     }
 }
 
-class wall extends Obstacles implements Block {
+class wall extends Obstacles {
     private final Color color;
     private final RectangleImage rect;
     
@@ -187,23 +127,12 @@ class wall extends Obstacles implements Block {
         rect = new RectangleImage(convertPos(pos), getBlockSize(), getBlockSize(), color);
     }
     
-    @Override
-    public int size() {
-        return getBlockSize();
-    }
-
-    @Override
-    public String type() {
-        return "wall";
-    }
-
-    @Override
     public RectangleImage getRect() {
         return this.rect;
     }
 }
 
-class endPoint extends Obstacles implements Block {
+class endPoint extends Obstacles {
     private final Color color;
     private final RectangleImage rect;
     
@@ -213,23 +142,12 @@ class endPoint extends Obstacles implements Block {
         rect = new RectangleImage(convertPos(pos), getBlockSize(), getBlockSize(), color);
     }
     
-    @Override
-    public int size() {
-        return getBlockSize();
-    }
-
-    @Override
-    public String type() {
-        return "endPoint";
-    }
-
-    @Override
     public RectangleImage getRect() {
         return this.rect;
     }    
 }
 
-class empty extends Obstacles implements Block {
+class empty extends Obstacles {
     private final Color color;
     private final RectangleImage rect;
 
@@ -237,18 +155,7 @@ class empty extends Obstacles implements Block {
         this.color = Color.LIGHT_GRAY;
         rect = new RectangleImage(convertPos(pos), getBlockSize(), getBlockSize(), color);
     }
-
-    @Override
-    public int size() {
-        return getBlockSize();
-    }
-
-    @Override
-    public String type() {
-        return "empty";
-    }
-
-    @Override
+    
     public RectangleImage getRect() {
         return this.rect;
     }

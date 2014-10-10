@@ -1,6 +1,7 @@
-package movingBlocks;
+package movingblocks;
 
 import java.awt.Color;
+import java.util.Random;
 
 import javalib.funworld.*;
 import javalib.worldimages.*;
@@ -15,14 +16,22 @@ public class mainObject extends World {
     private static final RectangleImage[][] world = new RectangleImage[numberBlocks][numberBlocks];
     private final playerObject player;
     private boolean end = false;
+    private boolean gameOver = false;
+    
+    private final boolean testingMode;
+    
     private int steps = 0;
     private int best = 0;
+    private int score = 0;
     
-    public mainObject(playerObject player, int level) {
+    public mainObject(playerObject player, int level, boolean mode) {
+        
         this.player = player;
         this.LEVEL = level;
+        this.testingMode = mode;
         
         System.out.println("\n------------- LEVEL " + level + "-------------");
+        System.out.println("Is this a testing mode? " + this.testingMode);
         // Clear the world
         for(int i=0; i<numberBlocks; i++)
             for(int j=0; j<numberBlocks; j++) {
@@ -70,47 +79,63 @@ public class mainObject extends World {
     @Override
     public World onKeyEvent(String str) {
         //Posn oldPos = player.getPos();
-        switch(str) {
-            case "right":
-                steps += player.moveRight(world);
-                break;
-            case "left":
-                steps += player.moveLeft(world);
-                break;
-            case "up":
-                steps += player.moveUp(world);
-                break;
-            case "down":
-                steps += player.moveDown(world);
-                break;
-            default:
-                System.out.println("default");
-                break;
+        if(!gameOver) {
+            switch(str) {
+                case "right":
+                    steps += player.moveRight(world);
+                    break;
+                case "left":
+                    steps += player.moveLeft(world);
+                    break;
+                case "up":
+                    steps += player.moveUp(world);
+                    break;
+                case "down":
+                    steps += player.moveDown(world);
+                    break;
+                default:
+                    System.out.println("default");
+                    break;
+            }
+
+            //System.out.println("You have taken " + steps + " steps so far.");
+            movePlayer(player);
+
+            if(end) {
+                System.out.println("You reached the goal! Steps taken: " + steps);
+                System.out.println("Jsyk, steps taken on the best solution: " + best);
+                gameOver = true;
+                System.out.println("Press any key to go to the next level...");
+                LEVEL++;
+            }
+        }
+        else {
+            gameOver = false;
+            if(LEVEL < 8) {
+                    playerObject player = new playerObject();
+                    mainObject obj = new mainObject(player, LEVEL, this.testingMode);
+                    // run the next level
+                    return obj;
+                }
+                else {
+                    System.out.println("The game is over.");
+                    System.out.println("Your score is: " + score);
+                    this.endOfWorld("");
+            }
         }
         
-        //System.out.println("You have taken " + steps + " steps so far.");
-        movePlayer(player);
-        
-        if(end) {
-            System.out.println("You reached the goal! Steps taken: " + steps);
-            System.out.println("Jsyk, steps taken on the best solution: " + best);
-            LEVEL++;
+        this.score += 100 - 10*(best-steps);
             
-            if(LEVEL == 8) {
-                this.endOfWorld("Game Over!");
-            }
-            else {
-                this.stopWorld();
-                playerObject p = new playerObject();
-                mainObject obj = new mainObject(p, LEVEL);
-        
-                // run the next level
-                obj.bigBang(size, size, 1);
-            }
-            
-        }
-        
-        return this;
+        return this;        
+    }
+    
+    @Override
+    public World onTick() {
+        if(!testingMode)
+            return this;
+        else {
+            return this.onKeyEvent(randomMove());
+        }        
     }
     
     // Convert (720,720) into (5,5) for example
@@ -127,4 +152,38 @@ public class mainObject extends World {
     public int bestPath() {
         return new ASearch(world, player).getSolution();
     }
+    
+    
+    // =============================== Methods used for testing ===============================
+    public static int randomInt(int max) {
+        return new Random().nextInt(max);
+    }
+    
+    public String randomMove() {
+        int x = randomInt(9);
+        String str = "";
+        switch(x) {
+            case 0:
+                str = "left";
+                break;
+            case 1:
+            case 4:
+            case 7:
+                str = "right";
+                break;
+            case 2:
+            case 5:
+            case 8:
+                str = "up";
+                break;
+            case 3:
+            case 6:
+            case 9:
+                str = "down";
+                break;
+        }
+        return str;
+    }
+    
+    
 }

@@ -1,4 +1,4 @@
-package movingBlocks;
+package movingblocks;
 
 import java.awt.Color;
 import static java.lang.Math.*;
