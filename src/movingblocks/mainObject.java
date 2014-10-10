@@ -22,7 +22,7 @@ public class mainObject extends World {
         this.player = player;
         this.LEVEL = level;
         
-        System.out.println("------------- LEVEL " + level + "-------------\n");
+        System.out.println("\n------------- LEVEL " + level + "-------------");
         // Clear the world
         for(int i=0; i<numberBlocks; i++)
             for(int j=0; j<numberBlocks; j++) {
@@ -96,7 +96,7 @@ public class mainObject extends World {
             System.out.println("Jsyk, steps taken on the best solution: " + best);
             LEVEL++;
             
-            if(LEVEL == 6) {
+            if(LEVEL == 8) {
                 this.endOfWorld("Game Over!");
             }
             else {

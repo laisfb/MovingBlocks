@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package movingBlocks;
 
 import java.awt.Color;
@@ -21,31 +16,16 @@ class mySortedList {
         this.size = internalList.size();
     }
     
+    public boolean isEmpty() {
+        return internalList.isEmpty();
+    }
+    
     public int getSize() {
         return this.size;
     }
     
-    public void addLast(myNode n) {
-        internalList.addLast(n);
-        this.size = internalList.size();
-    }
-    
-    public void addFirst(myNode n) {
-        internalList.addFirst(n);
-        this.size = internalList.size();
-    }
-    
-    public void add(myNode n, int i) {
-        internalList.add(i, n);
-        this.size = internalList.size();
-    }
-    
-    public myNode get(int i) {
+    public myNode getAt(int i) {
         return internalList.get(i);
-    }
-    
-    public boolean isEmpty() {
-        return internalList.isEmpty();
     }
     
     public myNode getFirst() {
@@ -57,36 +37,53 @@ class mySortedList {
         this.size = internalList.size();
     }
     
-    public void clear() {
-        internalList.clear();
+    public void addFirst(myNode n) {
+        internalList.addFirst(n);
         this.size = internalList.size();
+    }
+    
+    public void addLast(myNode n) {
+        internalList.addLast(n);
+        this.size = internalList.size();
+    }
+    
+    public void addAt(myNode n, int i) {
+        internalList.add(i, n);
+        this.size = internalList.size();
+    }
+    
+    public void addFrom(myNode n, int start) {
+        if(start==size)
+            this.addLast(n);
+        else
+            this.add(n, start, this.size-1);
     }
     
     public void add(myNode n) {
         if(!contains(n))
-            add(n, 0, size-1);
+            add(n, 0, this.size-1);
     }
     
     public void add(myNode n, int min, int max) {
         if(max==min) {      //it has only one element
             myNode m = internalList.get(max);
             if(n.getF() < m.getF()) {
-                add(n, max);
+                addAt(n, max);
             }
             else {
-                add(n, max+1);
+                addAt(n, max+1);
             }
         }
         else if(max-min == 1) {     //it has two elements
             myNode m1 = internalList.get(min);
             myNode m2 = internalList.get(max);
             if(n.getF() < m1.getF())
-                add(n, min);
+                addAt(n, min);
             else {
                 if(n.getF() < m2.getF())
-                    add(n, max);
+                    addAt(n, max);
                 else
-                    add(n, max+1);               
+                    addAt(n, max+1);               
             }
         }
         else {      //more than two elements
@@ -139,6 +136,7 @@ class myNode {
     public int getI() { return this.i; }
     public int getJ() { return this.j; }
     public int getG() { return this.g; }
+    public int getH() { return this.h; }
     public int getF() { return this.f; }
     
     public boolean isEqual(myNode n) {
@@ -187,30 +185,26 @@ public class ASearch {
         myNodeList.addLast(root);
         int i = 0;
         
-        //check if list is empty
-        while(!myNodeList.isEmpty()) {
+        //did it checked everyone in the list?
+        while(i < size) {
             //System.out.println("Keep going! Size: " + myNodeList.getSize());
             //check if first node is goal
-            if ( goal.isEqual(myNodeList.get(i)) ) {
+            if ( goal.isEqual(myNodeList.getAt(i)) ) {
                 //if yes, done
-                this.solution = (myNodeList.get(i)).getF();
+                this.solution = (myNodeList.getAt(i)).getF();
                 System.out.println("Yay! I found a solution!");
                 return;
-                //
             }
             else {
                 //System.out.println("Not goal. Expand!");
-                expand(myNodeList.get(i));
+                expand(myNodeList.getAt(i), i+1);       //expand node and add children to list
                 //System.out.println("Skiped already explored node");
                 i++;
-                //myNodeList.removeFirst();
-                //expand node and add children to list
-                //remove the first node, already checked
             }
         }
         
-        if(myNodeList.isEmpty())
-            System.out.println("Error! Solution not found!"); //if yes, fail
+        if(i==size)
+            System.out.println("Error! Solution not found!");
         
     }
     
@@ -239,18 +233,16 @@ public class ASearch {
         return new Posn(  (pos.x - blockSize/2)/blockSize  ,  (pos.y - blockSize/2)/blockSize  );
     }
     
-    private void expand(myNode n) {
+    private void expand(myNode n, int x) {
         
-        //DON'T add child if it is off board
-        //If is inside the board, check if it is a wall first
-        //If it's not, than ok
+        //DON'T add child if it is off board or a wall
         
-        myNode child = n.moveRight();       
+        myNode child = n.moveRight();
         if(onBoard(child) && !isWall(child)) {
             estimateH(child);
-            setG(n, child);            
+            setG(n, child);        
             child.setF();
-            myNodeList.add(child);
+            myNodeList.addFrom(child,x);
         }
         
         child = n.moveLeft();
@@ -258,15 +250,15 @@ public class ASearch {
             estimateH(child);
             setG(n, child);
             child.setF();
-            myNodeList.add(child);
+            myNodeList.addFrom(child,x);
         }
         
         child = n.moveUp();
         if(onBoard(child) && !isWall(child)) {
             estimateH(child);
             setG(n, child);
-            child.setF();
-            myNodeList.add(child);
+            child.setF();    
+            myNodeList.addFrom(child,x);
         }
         
         child = n.moveDown();
@@ -274,7 +266,7 @@ public class ASearch {
             estimateH(child);
             setG(n, child);            
             child.setF();
-            myNodeList.add(child);
+            myNodeList.addFrom(child,x);
         }
     }
     
@@ -284,7 +276,6 @@ public class ASearch {
     }
     
     private boolean isWall(myNode n) { 
-        //System.out.println("Is there a wall at (" + n.getI() + "," + n.getJ() + ")?");
         return world[n.getI()][n.getJ()].color == Color.GREEN;
     }
     
@@ -300,13 +291,13 @@ public class ASearch {
         n.setH((goal.getI() - n.getI()) + abs(goal.getJ() - n.getJ()));
     }
     
-    private void setG(myNode parent, myNode child) { 
+    private void setG(myNode parent, myNode child) {
         if(isRed(child))
-               child.setG(parent.getG() + 2);
-            else if(isBlue(child))
-               child.setG(parent.getG() + 0); //added zero just to understand what's happening
-            else
-                child.setG(parent.getG() + 1);
+            child.setG(parent.getG() + 2);
+         else if(isBlue(child))
+            child.setG(parent.getG() + 0); //added zero just to understand what's happening
+         else
+             child.setG(parent.getG() + 1);
     }
     
     
