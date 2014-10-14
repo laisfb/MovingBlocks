@@ -17,31 +17,47 @@ public class mainObject extends World {
     private final playerObject player;
     private boolean end = false;
     private boolean gameOver = false;
-    
-    private final boolean testingMode;
-    
+        
     private int steps = 0;
     private int best = 0;
     private int score = 0;
+    private final int accScore;
     
-    public mainObject(playerObject player, int level, boolean mode) {
+    //***** Variables used for testing *****
+    private final boolean testingMode;
+    private final Posn endPoint;
+    private String move = "";
+    private Posn oldPos;
+    private int stepsBeforeMove = 0;
+    private int done = 0;
+    //**************************************
+    
+    public mainObject(playerObject player, int level, boolean mode, int acc) {
         
         this.player = player;
         this.LEVEL = level;
-        this.testingMode = mode;
+        this.accScore = acc;
         
-        System.out.println("\n------------- LEVEL " + level + "-------------");
-        System.out.println("Is this a testing mode? " + this.testingMode);
+        //**************************************
+        this.testingMode = mode;
+        //**************************************
+        
+        System.out.println("\n\n------------- LEVEL " + level + "-------------");
+        //System.out.println("Is this a testing mode? " + this.testingMode);
+        
         // Clear the world
         for(int i=0; i<numberBlocks; i++)
             for(int j=0; j<numberBlocks; j++) {
                 Posn pos = new Posn(i,j);
-                empty emp = new empty(pos);
-                world[i][j] = emp.getRect();
+                world[i][j] = new RectangleImage(convertFromIndex(pos), blockSize, blockSize, Color.LIGHT_GRAY);
             }
         
         // Put the static objects on the array
         staticObjects staticWorld = new staticObjects(world, player, level);
+        
+        //**************************************
+        this.endPoint = convertToIndex(staticWorld.getEndPoint().pinhole);
+        //**************************************
         
         // Add the player to the world
         int j = (player.getPos().y - (blockSize/2))/blockSize;
@@ -69,7 +85,6 @@ public class mainObject extends World {
             for(int j=(blockSize/2); j<size; j+=blockSize) {
                 WorldImage frame = new FrameImage(new Posn(i, j), blockSize, blockSize, Color.black);
                 img = new OverlayImages(img, frame);
-                //c.drawImage(frame);
             }
         }
         
@@ -78,7 +93,7 @@ public class mainObject extends World {
     
     @Override
     public World onKeyEvent(String str) {
-        //Posn oldPos = player.getPos();
+        this.stepsBeforeMove = this.steps;
         if(!gameOver) {
             switch(str) {
                 case "right":
@@ -97,35 +112,50 @@ public class mainObject extends World {
                     System.out.println("default");
                     break;
             }
-
+            
             //System.out.println("You have taken " + steps + " steps so far.");
             movePlayer(player);
-
+            if(testingMode)
+                testing();
+            
             if(end) {
-                System.out.println("You reached the goal! Steps taken: " + steps);
-                System.out.println("Jsyk, steps taken on the best solution: " + best);
+                this.score = 1000 - 10*(steps-best);
+                if(this.score < 0)
+                    this.score = 0;
                 gameOver = true;
-                System.out.println("Press any key to go to the next level...");
                 LEVEL++;
+                if(!testingMode) {
+                    System.out.println("\nYou reached the goal! Steps taken: " + steps);
+                    System.out.println("Jsyk, steps taken on the best solution: " + best);
+                    System.out.println("Your score on this level was " + this.score);
+                    System.out.println("Press any key to go to the next level...");
+                }
             }
         }
         else {
             gameOver = false;
             if(LEVEL < 8) {
-                    playerObject player = new playerObject();
-                    mainObject obj = new mainObject(player, LEVEL, this.testingMode);
+                mainObject obj = new mainObject(new playerObject(), LEVEL, this.testingMode, this.accScore + this.score);
+                // run the next level
+                return obj;
+            }
+            else {
+                if(!testingMode) {
+                    System.out.println("The game is over.");
+                    System.out.println("Your overall score is: " + this.accScore);
+                }
+                done++;
+                if(!testingMode || done == 10)
+                    this.endOfWorld("");
+                else {
+                    System.out.println("\n***** STARTING OVER *****\n");
+                    mainObject obj = new mainObject(new playerObject(), 1, this.testingMode, 0);
                     // run the next level
                     return obj;
                 }
-                else {
-                    System.out.println("The game is over.");
-                    System.out.println("Your score is: " + score);
-                    this.endOfWorld("");
             }
         }
         
-        this.score += 100 - 10*(best-steps);
-            
         return this;        
     }
     
@@ -134,17 +164,24 @@ public class mainObject extends World {
         if(!testingMode)
             return this;
         else {
-            return this.onKeyEvent(randomMove());
-        }        
+            this.oldPos = convertToIndex(player.getPos());
+            this.move = randomMove();
+            return this.onKeyEvent(move);
+        }
     }
     
     // Convert (720,720) into (5,5) for example
-    public Posn convertPos(Posn pos) {
+    public static Posn convertToIndex(Posn pos) {
         return new Posn(  (pos.x - blockSize/2)/blockSize  ,  (pos.y - blockSize/2)/blockSize  );
     }
     
+    // Convert (5,5) into (720,720) for example
+    public static Posn convertFromIndex(Posn pos) {
+        return new Posn(  ((pos.x * blockSize) + blockSize/2)  ,  ((pos.y * blockSize) + blockSize/2)  );
+    }
+    
     public void movePlayer(playerObject player) {    
-        Posn playerPos = convertPos(player.getPos());
+        Posn playerPos = convertToIndex(player.getPos());
         end = world[playerPos.x][playerPos.y].color == Color.BLACK;
         world[playerPos.x][playerPos.y] = player.getRect();
     }
@@ -162,6 +199,7 @@ public class mainObject extends World {
     public String randomMove() {
         int x = randomInt(9);
         String str = "";
+        
         switch(x) {
             case 0:
                 str = "left";
@@ -185,5 +223,76 @@ public class mainObject extends World {
         return str;
     }
     
+    public void testing() {
+        Posn pos = convertToIndex(player.getPos());
+        
+        //The game must end when
+        //  - If the end point is one step below the player
+        //    And the player move down
+        //  - If the end point is one step above the player
+        //    And the player move up
+        //  - If the end point is one step to the right of the player
+        //    And the player move right
+        // Also, the number of steps must be increased by one
+        
+        if( (new Posn(oldPos.x + 1, oldPos.y).isEqual(endPoint) && this.move.equals("right")) ||
+            (new Posn(oldPos.x, oldPos.y - 1).isEqual(endPoint) && this.move.equals("up"))    ||
+            (new Posn(oldPos.x, oldPos.y + 1).isEqual(endPoint) && this.move.equals("down"))  ) {
+                //System.out.println("\nFound the end point!");
+                System.out.println((steps == (this.stepsBeforeMove+1)) + " should be true");
+                System.out.println(end + " should be true");
+        }                  
+        
+        //If the player is on the border and it makes an invalid move 
+        // (aka trying to "get out" of the board)
+        //  the position must stay the same,
+        //  and the number of steps can't increase
+        if( ( (oldPos.x == 0 && this.move.equals("left"))               )   ||
+            ( (oldPos.x == numberBlocks-1 && this.move.equals("right")) )   ||
+            ( (oldPos.y == 0 && this.move.equals("up"))                 )   ||
+            ( (oldPos.y == numberBlocks-1 && this.move.equals("down"))  )   ) {
+                //System.out.println("Hit the border!");
+                System.out.println(oldPos.isEqual(pos) + " should be true");
+                //System.out.println("oldPos: (" + oldPos.x + "," + oldPos.y + ")   |   pos: (" + pos.x + "," + pos.y + ")");
+                System.out.println((this.stepsBeforeMove == steps) + " should be true");
+        }
+        
+        //If the player hits a wall, the same conditions as above must be true
+        Color green = Color.GREEN;
+        if( ( oldPos.x+1 < numberBlocks && (world[oldPos.x+1][oldPos.y].color == green) && this.move.equals("right") )   ||
+            ( oldPos.x-1 > 0            && (world[oldPos.x-1][oldPos.y].color == green) && this.move.equals("left")  )   ||
+            ( oldPos.y-1 > 0            && (world[oldPos.x][oldPos.y-1].color == green) && this.move.equals("up")    )   ||
+            ( oldPos.y+1 < numberBlocks && (world[oldPos.x][oldPos.y+1].color == green) && this.move.equals("down")  )   ) {
+                //System.out.println("Hit a wall!");
+                System.out.println(oldPos.isEqual(pos) + " should be true");
+                System.out.println((this.stepsBeforeMove == steps) + " should be true");
+        }
+        
+        //If the player steps on a red square, the number of steps must increase by two
+        Color red = Color.RED;
+        if( ( oldPos.x+1 < numberBlocks && (world[oldPos.x+1][oldPos.y].color == red) && this.move.equals("right") )   ||
+            ( oldPos.x-1 > 0            && (world[oldPos.x-1][oldPos.y].color == red) && this.move.equals("left")  )   ||
+            ( oldPos.y-1 > 0            && (world[oldPos.x][oldPos.y-1].color == red) && this.move.equals("up")    )   ||
+            ( oldPos.y+1 < numberBlocks && (world[oldPos.x][oldPos.y+1].color == red) && this.move.equals("down")  )   ) {
+                //System.out.println("\nRed square!");
+                System.out.println((steps == (this.stepsBeforeMove+2)) + " should be true");
+        }
+        
+        //If the player steps on a blue square, the number of steps must increase by one
+        Color blue = Color.BLUE;
+        if( ( oldPos.x+1 < numberBlocks && (world[oldPos.x+1][oldPos.y].color == blue) && this.move.equals("right") )   ||
+            ( oldPos.x-1 > 0            && (world[oldPos.x-1][oldPos.y].color == blue) && this.move.equals("left")  )   ||
+            ( oldPos.y-1 > 0            && (world[oldPos.x][oldPos.y-1].color == blue) && this.move.equals("up")    )   ||
+            ( oldPos.y+1 < numberBlocks && (world[oldPos.x][oldPos.y+1].color == blue) && this.move.equals("down")  )   ) {
+                //System.out.println("\nBlue square!");
+                System.out.println((steps == (this.stepsBeforeMove+1)) + " should be true");
+        }
+        
+        if(end) {
+            //System.out.println("\nEnd of the game!");
+            System.out.println( (this.score <= 1000) + " should be true");
+            System.out.println( (this.accScore <= LEVEL*1000) + " should be true");
+        }
+    }
     
 }

@@ -4,11 +4,96 @@ import java.awt.Color;
 import java.util.Random;
 import javalib.worldimages.*;
 
+
 public class staticObjects {
     
     private final static int size = 720;
     private final static int blockSize = 120;
     private final static int numberBlocks = size/blockSize;
+    
+    private final RectangleImage endPoint;
+   
+    public staticObjects(RectangleImage[][] world, playerObject player, int level) {
+        Posn p = player.getPos();
+        
+        //There's no need to check if the position is the same as the mainObject
+        //Because they will always be in different rows
+        Posn epPos = new Posn(randomInt(), randomInt());
+        epPos.x = numberBlocks - 1;
+        this.endPoint = new RectangleImage(convertFromIndex(epPos), blockSize, blockSize, Color.BLACK);
+        
+        world[numberBlocks-1][epPos.y] = this.endPoint;        
+      
+        int tam = 3*(level-1) + 2;
+        Posn[] obst = new Posn[tam];
+        obst[0] = p;
+        obst[1] = epPos;
+        int j=2;
+        
+        for(int i=1; i<level; i++) {
+            
+            Posn rsPos = new Posn(randomInt(), randomInt());
+            while(notValidPos(rsPos, obst, j))
+                rsPos = new Posn(randomInt(), randomInt());            
+            obst[j] = rsPos;
+            j++;
+            world[rsPos.x][rsPos.y] = new RectangleImage(convertFromIndex(rsPos), blockSize, blockSize, Color.RED);
+            
+            Posn bsPos = new Posn(randomInt(), randomInt());
+            while(notValidPos(bsPos, obst, j))
+                bsPos = new Posn(randomInt(), randomInt());            
+            obst[j] = bsPos;
+            j++;
+            world[bsPos.x][bsPos.y] = new RectangleImage(convertFromIndex(bsPos), blockSize, blockSize, Color.BLUE);
+            
+            Posn wPos = new Posn(randomInt(), randomInt());
+            while(notValidPos(wPos, obst, j))
+                wPos = new Posn(randomInt(), randomInt());            
+            obst[j] = wPos;
+            j++;
+            world[wPos.x][wPos.y] = new RectangleImage(convertFromIndex(wPos), blockSize, blockSize, Color.GREEN);
+            
+        }
+    }
+    
+    public final boolean notValidPos(Posn p, Posn[] obst, int tam) {
+        //diff returns true if the difference between p and q is 1
+        //if (p.isEqual(obst[i]) || p.diff(obst[i]))
+        for(int i=0; i<tam; i++) {
+            if (p.isEqual(obst[i]))
+                return true;
+        }
+        return false;
+    }
+    
+    public static int randomInt() {
+        return new Random().nextInt(numberBlocks-1);
+    }
+    
+    // Convert (720,720) into (5,5) for example
+    public static Posn convertToIndex(Posn pos) {
+        return new Posn(  (pos.x - blockSize/2)/blockSize  ,  (pos.y - blockSize/2)/blockSize  );
+    }
+    
+    // Convert (5,5) into (720,720) for example
+    public static Posn convertFromIndex(Posn pos) {
+        return new Posn(  ((pos.x * blockSize) + blockSize/2)  ,  ((pos.y * blockSize) + blockSize/2)  );
+    }
+    
+    public RectangleImage getEndPoint() {
+        return this.endPoint;
+    }
+}
+
+
+/*
+public class staticObjects {
+    
+    private final static int size = 720;
+    private final static int blockSize = 120;
+    private final static int numberBlocks = size/blockSize;
+    
+    private final RectangleImage endPoint;
    
     public staticObjects(RectangleImage[][] world, playerObject player, int level) {
         Posn p = player.getPos();
@@ -18,6 +103,8 @@ public class staticObjects {
         Posn epPos = new Posn(randomInt(), randomInt());
         endPoint ep = new endPoint(epPos.y);
         world[numberBlocks-1][epPos.y] = ep.getRect();
+        
+        this.endPoint = ep.getRect();
       
         int tam = 3*(level-1) + 2;
         Posn[] obst = new Posn[tam];
@@ -67,9 +154,14 @@ public class staticObjects {
     public static int randomInt() {
         return new Random().nextInt(numberBlocks-1);
     }
+    
+    public RectangleImage getEndPoint() {
+        return this.endPoint;
+    }
 }
 
 class Obstacles {
+    
     private final static int blockSize = 120;
     private final static int size = 720;
     private final static int numberBlocks = size/blockSize;
@@ -159,4 +251,4 @@ class empty extends Obstacles {
     public RectangleImage getRect() {
         return this.rect;
     }
-}
+}*/

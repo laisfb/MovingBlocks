@@ -192,7 +192,7 @@ public class ASearch {
             if ( goal.isEqual(myNodeList.getAt(i)) ) {
                 //if yes, done
                 this.solution = (myNodeList.getAt(i)).getF();
-                System.out.println("Yay! I found a solution!");
+                //System.out.println("Yay! I found a solution!");
                 return;
             }
             else {
@@ -213,7 +213,7 @@ public class ASearch {
     }
     
     private void makeRoot(playerObject player) {
-        this.root = new myNode(convertPos(player.getPos()));
+        this.root = new myNode(convertToIndex(player.getPos()));
         this.root.setG(0);
         estimateH(root);
         this.root.setF();
@@ -229,8 +229,13 @@ public class ASearch {
     }
     
     // Convert (720,720) into (5,5) for example
-    private Posn convertPos(Posn pos) {
+    public static Posn convertToIndex(Posn pos) {
         return new Posn(  (pos.x - blockSize/2)/blockSize  ,  (pos.y - blockSize/2)/blockSize  );
+    }
+    
+    // Convert (5,5) into (720,720) for example
+    public static Posn convertFromIndex(Posn pos) {
+        return new Posn(  ((pos.x * blockSize) + blockSize/2)  ,  ((pos.y * blockSize) + blockSize/2)  );
     }
     
     private void expand(myNode n, int x) {
