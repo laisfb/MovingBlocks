@@ -1,6 +1,7 @@
 package movingblocks;
 
 import java.awt.Color;
+import static java.lang.Math.abs;
 import java.util.Random;
 import javalib.worldimages.*;
 
@@ -24,43 +25,60 @@ public class staticObjects {
         
         world[numberBlocks-1][epPos.y] = this.endPoint;        
       
+        //Store all occupied positions
         int tam = 3*(level-1) + 2;
         Posn[] obst = new Posn[tam];
         obst[0] = p;
         obst[1] = epPos;
         int j=2;
         
+        //Store positions with a wall
+        Posn[] walls = new Posn[level];
+        walls[0] = epPos;
+        int k = 1;
+        
         for(int i=1; i<level; i++) {
+            
+            Posn wPos = new Posn(randomInt(), randomInt());
+            while(notValidPos(wPos, obst, j)) // && dist(wPos, walls, k)
+                wPos = new Posn(randomInt(), randomInt());
+            world[wPos.x][wPos.y] = new RectangleImage(convertFromIndex(wPos), blockSize, blockSize, Color.GREEN);
+            walls[k] = wPos;
+            k++;
+            obst[j] = wPos;
+            j++;
             
             Posn rsPos = new Posn(randomInt(), randomInt());
             while(notValidPos(rsPos, obst, j))
-                rsPos = new Posn(randomInt(), randomInt());            
+                rsPos = new Posn(randomInt(), randomInt());
+            world[rsPos.x][rsPos.y] = new RectangleImage(convertFromIndex(rsPos), blockSize, blockSize, Color.RED);
             obst[j] = rsPos;
             j++;
-            world[rsPos.x][rsPos.y] = new RectangleImage(convertFromIndex(rsPos), blockSize, blockSize, Color.RED);
             
             Posn bsPos = new Posn(randomInt(), randomInt());
             while(notValidPos(bsPos, obst, j))
-                bsPos = new Posn(randomInt(), randomInt());            
+                bsPos = new Posn(randomInt(), randomInt());
+            world[bsPos.x][bsPos.y] = new RectangleImage(convertFromIndex(bsPos), blockSize, blockSize, Color.BLUE);
             obst[j] = bsPos;
             j++;
-            world[bsPos.x][bsPos.y] = new RectangleImage(convertFromIndex(bsPos), blockSize, blockSize, Color.BLUE);
-            
-            Posn wPos = new Posn(randomInt(), randomInt());
-            while(notValidPos(wPos, obst, j))
-                wPos = new Posn(randomInt(), randomInt());            
-            obst[j] = wPos;
-            j++;
-            world[wPos.x][wPos.y] = new RectangleImage(convertFromIndex(wPos), blockSize, blockSize, Color.GREEN);
             
         }
     }
     
     public final boolean notValidPos(Posn p, Posn[] obst, int tam) {
-        //diff returns true if the difference between p and q is 1
-        //if (p.isEqual(obst[i]) || p.diff(obst[i]))
         for(int i=0; i<tam; i++) {
-            if (p.isEqual(obst[i]))
+            if(p.isEqual(obst[i]))
+                return true;
+        }
+        return false;
+    }
+
+    //dist returns true if p and q are one beside the other in any direction
+    public final boolean dist(Posn p, Posn[] walls, int tam) {
+        for(int i=0; i<tam; i++) {
+           if( (  p.y == walls[i].y   && (p.x == walls[i].x-1 || p.x == walls[i].x + 1) )  ||
+               (  p.x == walls[i].x   && (p.y == walls[i].y-1 || p.y == walls[i].y + 1) )  ||
+               ( (p.x == walls[i].x-1 || p.x == walls[i].x+1) && (p.y == walls[i].y-1 || p.y == walls[i].y+1) )   )
                 return true;
         }
         return false;
