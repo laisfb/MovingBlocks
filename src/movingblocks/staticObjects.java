@@ -16,7 +16,6 @@ public class staticObjects {
    
     public staticObjects(RectangleImage[][] world, playerObject player, int level) {
         Posn p = convertToIndex(player.getPos());
-        if(level>6) level=6;
         
         //There's no need to check if the position is the same as the mainObject
         //Because they will always be in different columns
@@ -27,25 +26,23 @@ public class staticObjects {
         world[numberBlocks-1][epPos.y] = this.endPoint;        
       
         //Store all occupied positions
-        int tam = 3*(level-1) + 2;
+        int tam = 3*(level-1)+2;
         Posn[] obst = new Posn[tam];
         obst[0] = p;
         obst[1] = epPos;
         int j=2;
         
-        Posn[] walls = new Posn[level+1];
-        walls[0] = p;
-        walls[1] = epPos;
-        int k=2;
+        //Store the walls positions
+        Posn[] spec = new Posn[2];
+        spec[0] = p;
+        spec[1] = epPos;
         
         for(int i=1; i<level; i++) {
             
             Posn wPos = new Posn(randomInt(), randomInt());
-            while(dist(wPos, walls, k))
+            while(notValidPos(wPos, obst, j) || dist(wPos, spec, 2))
                 wPos = new Posn(randomInt(), randomInt());
             world[wPos.x][wPos.y] = new RectangleImage(convertFromIndex(wPos), blockSize, blockSize, Color.GREEN);
-            walls[k] = wPos;
-            k++;
             obst[j] = wPos;
             j++;
             
@@ -75,11 +72,12 @@ public class staticObjects {
     }
     
     // This function was created to make the walls have a certain distance of 
-    //  the player, the end point, and the other walls
+    //  the player, and the end point
     // Because since the game is randomly generated it can be the case where
     //  the walls are surrounding the player or the game, and therefore the
     //  game has no solution
-    // Returns true if the wall has a distance > 1 to both p and ep
+    // Returns true if the wall has a distance > 1 
+    //  to each one of the elements in the array (in this case, the two elements)
     // The "distance" means that both w.x and w.y must be greater by more than 1
     public final boolean dist(Posn p, Posn[] walls, int tam) {
         for(int i=0; i<tam; i++) {

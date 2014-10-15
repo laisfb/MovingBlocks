@@ -21,13 +21,14 @@ public class mainObject extends World {
     private int steps = 0;
     private int best = 0;
     private int score = 0;
-    private final int accScore;
+    private int accScore;
     
     //***** Variables used for testing *****
     private final boolean testingMode;
     private final Posn endPoint;
     private String move = "";
     private Posn oldPos;
+    private Color oldColor;
     private int stepsBeforeMove = 0;
     private int done = 0;
     //**************************************
@@ -121,32 +122,31 @@ public class mainObject extends World {
             if(end) {
                 //If the best solution is -1, it means the game couldn't find a solution
                 //So whatever the player does, will be the better solution
-                if(best == -1) 
+                if(best < 5)
                     best = steps;
                 this.score = 1000 - 10*(steps-best);
                 if(this.score < 0)
                     this.score = 0;
                 gameOver = true;
                 LEVEL++;
-                if(!testingMode) {
-                    System.out.println("\nYou reached the goal! Steps taken: " + steps);
-                    System.out.println("Jsyk, steps taken on the best solution: " + best);
-                    System.out.println("Your score on this level was " + this.score);
-                    System.out.println("Press any key to go to the next level...");
-                }
+                
+                System.out.println("\nYou reached the goal! Steps taken: " + steps);
+                System.out.println("Jsyk, steps taken on the best solution: " + best);
+                System.out.println("Your score on this level was " + this.score);
+                System.out.println("Press any key to go to the next level...");
             }
         }
         else {
             gameOver = false;
-            if(LEVEL < 8) {
+            this.accScore += this.score;
+            if(LEVEL < 7) {
                 // run the next level
-                return new mainObject(new playerObject(), LEVEL, this.testingMode, this.accScore + this.score);
+                return new mainObject(new playerObject(), LEVEL, this.testingMode, this.accScore);
             }
             else {
-                if(!testingMode) {
-                    System.out.println("The game is over.");
-                    System.out.println("Your overall score is: " + this.accScore);
-                }
+                System.out.println("The game is over.");
+                System.out.println("Your overall score is: " + this.accScore);
+                    
                 done++;
                 if(!testingMode || done == 10)
                     this.endOfWorld("");
@@ -167,6 +167,7 @@ public class mainObject extends World {
             return this;
         else {
             this.oldPos = convertToIndex(player.getPos());
+            this.oldColor = world[oldPos.x][oldPos.y].color;
             this.move = randomMove();
             return this.onKeyEvent(move);
         }
@@ -185,12 +186,14 @@ public class mainObject extends World {
     public void movePlayer(playerObject player) {    
         Posn playerPos = convertToIndex(player.getPos());
         end = world[playerPos.x][playerPos.y].color == Color.BLACK;
+        this.oldColor = world[playerPos.x][playerPos.y].color;
         world[playerPos.x][playerPos.y] = player.getRect();
     }
     
     public int bestPath() {
         return new ASearch(world, player).getSolution();
-    }
+    }    
+    
     
     
     // =============================== Methods used for testing ===============================
@@ -200,8 +203,7 @@ public class mainObject extends World {
     
     public String randomMove() {
         int x = randomInt(9);
-        String str = "";
-        
+        String str = "";        
         switch(x) {
             case 0:
                 str = "left";
@@ -240,7 +242,7 @@ public class mainObject extends World {
         if( (new Posn(oldPos.x + 1, oldPos.y).isEqual(endPoint) && this.move.equals("right")) ||
             (new Posn(oldPos.x, oldPos.y - 1).isEqual(endPoint) && this.move.equals("up"))    ||
             (new Posn(oldPos.x, oldPos.y + 1).isEqual(endPoint) && this.move.equals("down"))  ) {
-                //System.out.println("\nFound the end point!");
+                System.out.println("\nFound the end point!");
                 System.out.println((steps == (this.stepsBeforeMove+1)) + " should be true (end point 1)");
                 System.out.println(end + " should be true (end point 2)");
         }                  
@@ -253,7 +255,7 @@ public class mainObject extends World {
             ( (oldPos.x == numberBlocks-1 && this.move.equals("right")) )   ||
             ( (oldPos.y == 0 && this.move.equals("up"))                 )   ||
             ( (oldPos.y == numberBlocks-1 && this.move.equals("down"))  )   ) {
-                //System.out.println("Hit the border!");
+                System.out.println("\nHit the border!");
                 System.out.println(oldPos.isEqual(pos) + " should be true (border 1)");
                 //System.out.println("oldPos: (" + oldPos.x + "," + oldPos.y + ")   |   pos: (" + pos.x + "," + pos.y + ")");
                 System.out.println((this.stepsBeforeMove == steps) + " should be true (border 2)");
@@ -264,35 +266,26 @@ public class mainObject extends World {
             ( oldPos.x-1 > 0            && (world[oldPos.x-1][oldPos.y].color == Color.GREEN) && this.move.equals("left")  )   ||
             ( oldPos.y-1 > 0            && (world[oldPos.x][oldPos.y-1].color == Color.GREEN) && this.move.equals("up")    )   ||
             ( oldPos.y+1 < numberBlocks && (world[oldPos.x][oldPos.y+1].color == Color.GREEN) && this.move.equals("down")  )   ) {
-                //System.out.println("Hit a wall!");
+                System.out.println("\nHit a wall!");
                 System.out.println(oldPos.isEqual(pos) + " should be true (green 1)");
                 System.out.println((this.stepsBeforeMove == steps) + " should be true (green 2)");
         }
         
-        //If the player steps on a red square, the number of steps must increase by two
-        if( ( oldPos.x+1 < numberBlocks && (world[oldPos.x+1][oldPos.y].color == Color.RED) && this.move.equals("right") )   ||
-            ( oldPos.x-1 > 0            && (world[oldPos.x-1][oldPos.y].color == Color.RED) && this.move.equals("left")  )   ||
-            ( oldPos.y-1 > 0            && (world[oldPos.x][oldPos.y-1].color == Color.RED) && this.move.equals("up")    )   ||
-            ( oldPos.y+1 < numberBlocks && (world[oldPos.x][oldPos.y+1].color == Color.RED) && this.move.equals("down")  )   ) {
-                //System.out.println("\nRed square!");
+        //If the player steped on a red square, the number of steps must increase by two
+        if( this.oldColor == Color.RED ) {
+                System.out.println("\nRed square!");
                 System.out.println((steps == (this.stepsBeforeMove+2)) + " should be true (red)");
         }
         
         //If the player steps on a blue square, the number of steps must stay the same
-        if( ( oldPos.x+1 < numberBlocks && (world[oldPos.x+1][oldPos.y].color == Color.BLUE) && this.move.equals("right") )   ||
-            ( oldPos.x-1 > 0            && (world[oldPos.x-1][oldPos.y].color == Color.BLUE) && this.move.equals("left")  )   ||
-            ( oldPos.y-1 > 0            && (world[oldPos.x][oldPos.y-1].color == Color.BLUE) && this.move.equals("up")    )   ||
-            ( oldPos.y+1 < numberBlocks && (world[oldPos.x][oldPos.y+1].color == Color.BLUE) && this.move.equals("down")  )   ) {
-                //System.out.println("\nBlue square!");
+         if( this.oldColor == Color.BLUE ) {
+                System.out.println("\nBlue square!");
                 System.out.println((steps == this.stepsBeforeMove) + " should be true (blue)");
         }
         
         //If the player steps on a gray square, the number of steps must stay the same
-        if( ( oldPos.x+1 < numberBlocks && (world[oldPos.x+1][oldPos.y].color == Color.LIGHT_GRAY) && this.move.equals("right") )   ||
-            ( oldPos.x-1 > 0            && (world[oldPos.x-1][oldPos.y].color == Color.LIGHT_GRAY) && this.move.equals("left")  )   ||
-            ( oldPos.y-1 > 0            && (world[oldPos.x][oldPos.y-1].color == Color.LIGHT_GRAY) && this.move.equals("up")    )   ||
-            ( oldPos.y+1 < numberBlocks && (world[oldPos.x][oldPos.y+1].color == Color.LIGHT_GRAY) && this.move.equals("down")  )   ) {
-                //System.out.println("\Empty square!");
+        if( this.oldColor == Color.LIGHT_GRAY ) {
+                System.out.println("\nEmpty square!");
                 System.out.println((steps == (this.stepsBeforeMove+1)) + " should be true (gray)");
         }
         
