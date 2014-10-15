@@ -15,10 +15,11 @@ public class staticObjects {
     private final RectangleImage endPoint;
    
     public staticObjects(RectangleImage[][] world, playerObject player, int level) {
-        Posn p = player.getPos();
+        Posn p = convertToIndex(player.getPos());
+        if(level>6) level=6;
         
         //There's no need to check if the position is the same as the mainObject
-        //Because they will always be in different rows
+        //Because they will always be in different columns
         Posn epPos = new Posn(randomInt(), randomInt());
         epPos.x = numberBlocks - 1;
         this.endPoint = new RectangleImage(convertFromIndex(epPos), blockSize, blockSize, Color.BLACK);
@@ -32,15 +33,15 @@ public class staticObjects {
         obst[1] = epPos;
         int j=2;
         
-        //Store positions with a wall
-        Posn[] walls = new Posn[level];
-        walls[0] = epPos;
-        int k = 1;
+        Posn[] walls = new Posn[level+1];
+        walls[0] = p;
+        walls[1] = epPos;
+        int k=2;
         
         for(int i=1; i<level; i++) {
             
             Posn wPos = new Posn(randomInt(), randomInt());
-            while(notValidPos(wPos, obst, j)) // && dist(wPos, walls, k)
+            while(dist(wPos, walls, k))
                 wPos = new Posn(randomInt(), randomInt());
             world[wPos.x][wPos.y] = new RectangleImage(convertFromIndex(wPos), blockSize, blockSize, Color.GREEN);
             walls[k] = wPos;
@@ -72,13 +73,20 @@ public class staticObjects {
         }
         return false;
     }
-
-    //dist returns true if p and q are one beside the other in any direction
+    
+    // This function was created to make the walls have a certain distance of 
+    //  the player, the end point, and the other walls
+    // Because since the game is randomly generated it can be the case where
+    //  the walls are surrounding the player or the game, and therefore the
+    //  game has no solution
+    // Returns true if the wall has a distance > 1 to both p and ep
+    // The "distance" means that both w.x and w.y must be greater by more than 1
     public final boolean dist(Posn p, Posn[] walls, int tam) {
         for(int i=0; i<tam; i++) {
-           if( (  p.y == walls[i].y   && (p.x == walls[i].x-1 || p.x == walls[i].x + 1) )  ||
+           if(  p.isEqual(walls[i]) ||
+               (  p.y == walls[i].y   && (p.x == walls[i].x-1 || p.x == walls[i].x + 1) )  ||
                (  p.x == walls[i].x   && (p.y == walls[i].y-1 || p.y == walls[i].y + 1) )  ||
-               ( (p.x == walls[i].x-1 || p.x == walls[i].x+1) && (p.y == walls[i].y-1 || p.y == walls[i].y+1) )   )
+               ( (p.x == walls[i].x-1 || p.x == walls[i].x+1) && (p.y == walls[i].y-1 || p.y == walls[i].y+1) ) )
                 return true;
         }
         return false;

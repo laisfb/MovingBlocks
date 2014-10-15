@@ -119,6 +119,10 @@ public class mainObject extends World {
                 testing();
             
             if(end) {
+                //If the best solution is -1, it means the game couldn't find a solution
+                //So whatever the player does, will be the better solution
+                if(best == -1) 
+                    best = steps;
                 this.score = 1000 - 10*(steps-best);
                 if(this.score < 0)
                     this.score = 0;
